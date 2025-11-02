@@ -6,8 +6,9 @@ import path from 'path';
 import { execa } from 'execa';
 import { detectAngularProject, getAngularVersion } from '../utils/angular.js';
 import { createConfig } from '../utils/config.js';
-import { updateTailwindConfig } from '../utils/tailwind.js';
+import { createPostCSSConfig, updateTailwindConfig } from '../utils/tailwind.js';
 import { updateGlobalStyles } from '../utils/styles.js';
+import { configureTsConfig } from '../utils/tsconfig.js';
 
 export async function initCommand() {
     console.log(chalk.bold.cyan('\n🚀 Welcome to raz-ui!\n'));
@@ -95,18 +96,29 @@ export async function initCommand() {
         utilsPath: answers.utilsPath,
         baseColor: answers.baseColor,
         useCssVariables: answers.useCssVariables,
+        tailwindVersion: 3, // Always use v3
     });
     spinner.succeed('Configuration created!');
 
     // Step 5: Install dependencies
     spinner.start('Installing dependencies...');
     try {
-        await execa('npm', ['install', 'class-variance-authority', 'clsx', 'tailwind-merge', '--save']);
+        const deps = ['class-variance-authority', 'clsx', 'tailwind-merge'];
+        const devDeps = ['tailwindcss@^3.4.0', 'postcss', 'autoprefixer'];
+
+        await execa('npm', ['install', ...deps, '--save']);
+        await execa('npm', ['install', ...devDeps, '--save-dev']);
         spinner.succeed('Dependencies installed!');
     } catch (error) {
         spinner.warn('Failed to install dependencies automatically');
         console.log(chalk.yellow('\nPlease install manually:'));
         console.log(chalk.cyan('  npm install class-variance-authority clsx tailwind-merge'));
+        // if (answers.tailwindVersion === 4) {
+        //     console.log(chalk.cyan('  npm install -D @tailwindcss/postcss@next'));
+        // } else {
+        //     console.log(chalk.cyan('  npm install -D tailwindcss@^3.4.0 postcss autoprefixer'));
+        // }
+        console.log(chalk.cyan('  npm install -D tailwindcss@^3.4.0 postcss autoprefixer'));
     }
 
     // Step 6: Create utility files
@@ -125,24 +137,61 @@ export function cn(...inputs: ClassValue[]) {
     await fs.writeFile(path.join(utilsDir, 'utils.ts'), utilsContent);
     spinner.succeed('Utility files created!');
 
-    // Step 7: Update Tailwind config
+    // After Step 6 (Create utility files), add this new step:
+
+    // Step 6.5: Configure TypeScript path aliases
+    spinner.start('Configuring TypeScript path aliases...');
+    try {
+        await configureTsConfig(answers.componentsPath, answers.utilsPath);
+        spinner.succeed('TypeScript path aliases configured!');
+    } catch (error) {
+        spinner.warn('Could not configure TypeScript paths automatically');
+        console.log(chalk.yellow('\nPlease add the following to your tsconfig.json:'));
+        console.log(
+            chalk.cyan(`
+"paths": {
+  "@/*": ["src/*"],
+  "@/app/*": ["src/app/*"],
+  "@/lib/*": ["src/app/lib/*"],
+  "@/components/*": ["src/app/components/*"]
+}`)
+        );
+    }
+
+    // Step 7: Create PostCSS config
+    spinner.start('Creating PostCSS configuration...');
+    // await createPostCSSConfig(answers.tailwindVersion);
+    await createPostCSSConfig(3);
+    spinner.succeed('PostCSS configuration created!');
+
+    // Step 8: Update Tailwind config (only for v3)
+    // if (answers.tailwindVersion === 3) {
+    //     spinner.start('Updating Tailwind configuration...');
+    //     try {
+    //         await updateTailwindConfig(answers.baseColor, answers.useCssVariables, answers.tailwindVersion);
+    //         spinner.succeed('Tailwind configuration updated!');
+    //     } catch (error) {
+    //         spinner.warn('Could not update Tailwind config automatically');
+    //     }
+    // }
+
     spinner.start('Updating Tailwind configuration...');
     try {
+        // await updateTailwindConfig(answers.baseColor, answers.useCssVariables, answers.tailwindVersion);
         await updateTailwindConfig(answers.baseColor, answers.useCssVariables);
         spinner.succeed('Tailwind configuration updated!');
     } catch (error) {
         spinner.warn('Could not update Tailwind config automatically');
-        console.log(chalk.yellow('\nPlease update tailwind.config.js manually.'));
     }
 
-    // Step 8: Update global styles
+    // Step 9: Update global styles
     spinner.start('Updating global styles...');
     try {
-        await updateGlobalStyles(answers.baseColor, answers.useCssVariables);
+        // await updateGlobalStyles(answers.baseColor, answers.useCssVariables, answers.tailwindVersion);
+        await updateGlobalStyles(answers.baseColor, answers.useCssVariables, 3);
         spinner.succeed('Global styles updated!');
     } catch (error) {
         spinner.warn('Could not update styles automatically');
-        console.log(chalk.yellow('\nPlease update src/styles.css manually.'));
     }
 
     // Success!

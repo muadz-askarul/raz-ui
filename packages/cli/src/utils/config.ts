@@ -1,11 +1,11 @@
 import fs from 'fs-extra';
 import path from 'path';
-
 export interface RazConfig {
     componentsPath: string;
     utilsPath: string;
     baseColor: string;
     useCssVariables: boolean;
+    tailwindVersion: number; // Add this
 }
 
 export async function createConfig(config: RazConfig) {
@@ -15,7 +15,8 @@ export async function createConfig(config: RazConfig) {
         $schema: 'https://raz-ui.vercel.app/schema.json',
         style: 'default',
         tailwind: {
-            config: 'tailwind.config.js',
+            version: config.tailwindVersion, // Add this
+            config: config.tailwindVersion === 3 ? 'tailwind.config.js' : null,
             css: 'src/styles.css',
             baseColor: config.baseColor,
             cssVariables: config.useCssVariables,
@@ -42,5 +43,6 @@ export async function getConfig(): Promise<RazConfig | null> {
         utilsPath: config.aliases.utils,
         baseColor: config.tailwind.baseColor,
         useCssVariables: config.tailwind.cssVariables,
+        tailwindVersion: config.tailwind.version || 3, // Default to v3 for backward compat
     };
 }
