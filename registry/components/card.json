@@ -1,0 +1,13 @@
+{
+    "name": "card",
+    "type": "components:ui",
+    "dependencies": [],
+    "registryDependencies": [],
+    "files": [
+        {
+            "path": "ui/card.component.ts",
+            "type": "components:ui",
+            "content": "import { Component, input } from '@angular/core';\nimport { cn } from '@/lib/utils';\n\n@Component({\n  selector: 'div[razCard]',\n  standalone: true,\n  template: `<ng-content />`,\n  host: {\n    '[class]': 'computedClass()',\n  },\n})\nexport class CardComponent {\n  class = input<string>('');\n\n  computedClass() {\n    return cn(\n      'rounded-lg border bg-card text-card-foreground shadow-sm',\n      this.class()\n    );\n  }\n}\n\n@Component({\n  selector: 'div[razCardHeader]',\n  standalone: true,\n  template: `<ng-content />`,\n  host: {\n    '[class]': 'computedClass()',\n  },\n})\nexport class CardHeaderComponent {\n  class = input<string>('');\n\n  computedClass() {\n    return cn('flex flex-col space-y-1.5 p-6', this.class());\n  }\n}\n\n@Component({\n  selector: 'div[razCardTitle]',\n  standalone: true,\n  template: `<ng-content />`,\n  host: {\n    '[class]': 'computedClass()',\n  },\n})\nexport class CardTitleComponent {\n  class = input<string>('');\n\n  computedClass() {\n    return cn(\n      'text-2xl font-semibold leading-none tracking-tight',\n      this.class()\n    );\n  }\n}\n\n@Component({\n  selector: 'div[razCardDescription]',\n  standalone: true,\n  template: `<ng-content />`,\n  host: {\n    '[class]': 'computedClass()',\n  },\n})\nexport class CardDescriptionComponent {\n  class = input<string>('');\n\n  computedClass() {\n    return cn('text-sm text-muted-foreground', this.class());\n  }\n}\n\n@Component({\n  selector: 'div[razCardContent]',\n  standalone: true,\n  template: `<ng-content />`,\n  host: {\n    '[class]': 'computedClass()',\n  },\n})\nexport class CardContentComponent {\n  class = input<string>('');\n\n  computedClass() {\n    return cn('p-6 pt-0', this.class());\n  }\n}\n\n@Component({\n  selector: 'div[razCardFooter]',\n  standalone: true,\n  template: `<ng-content />`,\n  host: {\n    '[class]': 'computedClass()',\n  },\n})\nexport class CardFooterComponent {\n  class = input<string>('');\n\n  computedClass() {\n    return cn('flex items-center p-6 pt-0', this.class());\n  }\n}\n"
+        }
+    ]
+}

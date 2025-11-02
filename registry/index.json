@@ -1,0 +1,21 @@
+{
+    "name": "raz-ui",
+    "version": "0.0.1",
+    "components": [
+        {
+            "name": "button",
+            "type": "components:ui",
+            "files": ["button.json"]
+        },
+        {
+            "name": "card",
+            "type": "components:ui",
+            "files": ["card.json"]
+        },
+        {
+            "name": "badge",
+            "type": "components:ui",
+            "files": ["badge.json"]
+        }
+    ]
+}
