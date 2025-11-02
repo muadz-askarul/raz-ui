@@ -1,0 +1,30 @@
+{
+    "name": "raz-ui",
+    "version": "0.0.1",
+    "private": true,
+    "description": "A collection of re-usable Angular components built with Tailwind CSS",
+    "type": "module",
+    "scripts": {
+        "dev:cli": "pnpm --filter @raz-ui/cli dev",
+        "build:cli": "pnpm --filter @raz-ui/cli build",
+        "dev:docs": "pnpm --filter docs dev",
+        "build:docs": "pnpm --filter docs build"
+    },
+    "keywords": [
+        "angular",
+        "components",
+        "tailwind",
+        "ui",
+        "design-system"
+    ],
+    "author": "muadz-askarul",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/muadz-askarul/raz-ui.git"
+    },
+    "devDependencies": {
+        "@types/node": "^22.0.0",
+        "typescript": "^5.6.0"
+    }
+}
