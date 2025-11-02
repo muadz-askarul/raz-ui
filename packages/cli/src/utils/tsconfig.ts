@@ -1,55 +1,63 @@
 import fs from 'fs-extra';
 import path from 'path';
+import { parse, modify, applyEdits } from 'jsonc-parser';
 
 export async function configureTsConfig(componentsPath: string, utilsPath: string) {
     const tsconfigPath = path.join(process.cwd(), 'tsconfig.json');
     const tsconfigAppPath = path.join(process.cwd(), 'tsconfig.app.json');
 
-    // Normalize paths (remove trailing slashes, ensure they start with src/)
-    const normalizePathForAlias = (p: string) => {
-        // Remove trailing slash
-        p = p.replace(/\/$/, '');
-        // Ensure it starts with src/
+    // Normalize paths - ensure they start with "src/"
+    const normalizeForAlias = (p: string) => {
+        // Remove leading/trailing slashes
+        p = p.trim().replace(/^\/+|\/+$/g, '');
+        // Ensure starts with src/
         if (!p.startsWith('src/')) {
-            p = 'src/' + p;
+            p = `src/${p}`;
         }
         return p;
     };
 
-    const normalizedComponents = normalizePathForAlias(componentsPath);
-    const normalizedUtils = normalizePathForAlias(utilsPath);
+    const normalizedComponents = normalizeForAlias(componentsPath);
+    const normalizedUtils = normalizeForAlias(utilsPath);
 
-    // Create path aliases
+    // Build path aliases
     const paths: Record<string, string[]> = {
         '@/*': ['src/*'],
-        '@/components/*': [normalizedComponents + '/*'],
-        '@/lib/*': [normalizedUtils + '/*'],
+        '@/components/*': [`${normalizedComponents}/*`],
+        '@/lib/*': [`${normalizedUtils}/*`],
     };
 
-    // Update tsconfig.json
+    // Update tsconfig.json (with comments support)
     if (await fs.pathExists(tsconfigPath)) {
-        const tsconfig = await fs.readJSON(tsconfigPath);
-
-        if (!tsconfig.compilerOptions) {
-            tsconfig.compilerOptions = {};
-        }
-
-        tsconfig.compilerOptions.baseUrl = './';
-        tsconfig.compilerOptions.paths = paths;
-
-        await fs.writeJSON(tsconfigPath, tsconfig, { spaces: 2 });
+        await updateTsConfigFile(tsconfigPath, paths);
     }
 
-    // Update tsconfig.app.json
+    // Update tsconfig.app.json (with comments support)
     if (await fs.pathExists(tsconfigAppPath)) {
-        const tsconfigApp = await fs.readJSON(tsconfigAppPath);
-
-        if (!tsconfigApp.compilerOptions) {
-            tsconfigApp.compilerOptions = {};
-        }
-
-        tsconfigApp.compilerOptions.paths = paths;
-
-        await fs.writeJSON(tsconfigAppPath, tsconfigApp, { spaces: 2 });
+        await updateTsConfigFile(tsconfigAppPath, paths);
     }
+}
+
+async function updateTsConfigFile(filePath: string, paths: Record<string, string[]>) {
+    // Read file as text (preserves comments)
+    const content = await fs.readFile(filePath, 'utf-8');
+
+    // Parse JSONC (JSON with comments)
+    const config = parse(content);
+
+    // Ensure compilerOptions exists
+    if (!config.compilerOptions) {
+        config.compilerOptions = {};
+    }
+
+    // Set baseUrl if not in root tsconfig
+    let edits = modify(content, ['compilerOptions', 'baseUrl'], './', {});
+    let updatedContent = applyEdits(content, edits);
+
+    // Set paths
+    edits = modify(updatedContent, ['compilerOptions', 'paths'], paths, {});
+    updatedContent = applyEdits(updatedContent, edits);
+
+    // Write back (preserves formatting and comments)
+    await fs.writeFile(filePath, updatedContent, 'utf-8');
 }

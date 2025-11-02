@@ -142,19 +142,28 @@ export function cn(...inputs: ClassValue[]) {
     // Step 6.5: Configure TypeScript path aliases
     spinner.start('Configuring TypeScript path aliases...');
     try {
+        console.log(chalk.dim(`\nConfiguring paths:`));
+        console.log(chalk.dim(`  Components: ${answers.componentsPath}`));
+        console.log(chalk.dim(`  Utils: ${answers.utilsPath}`));
+
         await configureTsConfig(answers.componentsPath, answers.utilsPath);
         spinner.succeed('TypeScript path aliases configured!');
     } catch (error) {
-        spinner.warn('Could not configure TypeScript paths automatically');
-        console.log(chalk.yellow('\nPlease add the following to your tsconfig.json:'));
+        spinner.fail('Could not configure TypeScript paths automatically');
+        console.error(error);
+        console.log(chalk.yellow('\nPlease add the following to your tsconfig.json manually:'));
         console.log(
             chalk.cyan(`
-"paths": {
-  "@/*": ["src/*"],
-  "@/app/*": ["src/app/*"],
-  "@/lib/*": ["src/app/lib/*"],
-  "@/components/*": ["src/app/components/*"]
-}`)
+            {
+            "compilerOptions": {
+                "baseUrl": "./",
+                "paths": {
+                "@/*": ["src/*"],
+                "@/components/*": ["${answers.componentsPath}/*"],
+                "@/lib/*": ["${answers.utilsPath}/*"]
+                }
+            }
+            }`)
         );
     }
 
@@ -188,7 +197,7 @@ export function cn(...inputs: ClassValue[]) {
     spinner.start('Updating global styles...');
     try {
         // await updateGlobalStyles(answers.baseColor, answers.useCssVariables, answers.tailwindVersion);
-        await updateGlobalStyles(answers.baseColor, answers.useCssVariables, 3);
+        await updateGlobalStyles(answers.baseColor, answers.useCssVariables);
         spinner.succeed('Global styles updated!');
     } catch (error) {
         spinner.warn('Could not update styles automatically');
